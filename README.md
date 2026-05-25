@@ -63,6 +63,13 @@ Response:
 }
 ```
 
+## Deploy on Vercel
+
+The Astro app lives in `frontend/`. Root `vercel.json` points Vercel at that folder for install, build, and output.
+
+1. Import the GitHub repo in Vercel (leave **Root Directory** empty so `vercel.json` at the repo root is used).
+2. Optional: set **Environment variable** `PUBLIC_API_URL` to your deployed FastAPI base URL (e.g. `https://your-api.example.com`). Without it, Calculate will fail in production because there is no Python API on Vercel static hosting.
+
 ## Next steps
 
 - Multiplication, conjugate, polar form

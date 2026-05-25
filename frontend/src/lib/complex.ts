@@ -25,8 +25,10 @@ function trim(n: number): string {
 	return s;
 }
 
+const apiBase = import.meta.env.PUBLIC_API_URL?.replace(/\/$/, '') ?? '';
+
 export async function addComplexNumbers(a: Complex, b: Complex): Promise<AddResult> {
-	const res = await fetch('/api/complex/add', {
+	const res = await fetch(`${apiBase}/api/complex/add`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ a, b }),
