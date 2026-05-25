@@ -65,10 +65,11 @@ Response:
 
 ## Deploy on Vercel
 
-The Astro app lives in `frontend/`. Root `vercel.json` points Vercel at that folder for install, build, and output.
+The Astro app lives in `frontend/`. Root `vercel.json` builds that folder; **`api/complex/add.py`** is a Python serverless function on the same deployment (same origin as the site).
 
-1. Import the GitHub repo in Vercel (leave **Root Directory** empty so `vercel.json` at the repo root is used).
-2. Optional: set **Environment variable** `PUBLIC_API_URL` to your deployed FastAPI base URL (e.g. `https://your-api.example.com`). Without it, Calculate will fail in production because there is no Python API on Vercel static hosting.
+1. Import the GitHub repo in Vercel (leave **Root Directory** empty).
+2. **Do not set** `PUBLIC_API_URL` unless you host the FastAPI backend elsewhere. If it points to `localhost` or a dead URL, the UI will show “failed to fetch”.
+3. Optional: `PUBLIC_API_URL=https://your-fastapi-host` only when using an external backend (CORS allows `*.vercel.app`).
 
 ## Next steps
 
