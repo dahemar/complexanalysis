@@ -5,7 +5,6 @@ import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
 
 const mathCode = readPythonModule('complex_math.py');
-const apiCode = readPythonModule('main.py');
 ---
 
 <html lang="en">
@@ -67,8 +66,7 @@ const apiCode = readPythonModule('main.py');
 			</div>
 
 			<div class="python-stack">
-				<PythonPanel title="Core math" filename="backend/app/complex_math.py" code={mathCode} />
-				<PythonPanel title="API routes" filename="backend/app/main.py" code={apiCode} />
+				<PythonPanel title="Python" filename="backend/app/complex_math.py" code={mathCode} />
 			</div>
 		</main>
 

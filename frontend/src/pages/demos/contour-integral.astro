@@ -5,7 +5,6 @@ import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
 
 const mathCode = readPythonModule('contour_integral.py');
-const apiCode = readPythonModule('main.py');
 ---
 
 <html lang="en">
@@ -60,8 +59,7 @@ const apiCode = readPythonModule('main.py');
 			</ul>
 
 			<div class="python-stack">
-				<PythonPanel title="Core math" filename="backend/app/contour_integral.py" code={mathCode} />
-				<PythonPanel title="API route" filename="backend/app/main.py" code={apiCode} />
+				<PythonPanel title="Python" filename="backend/app/contour_integral.py" code={mathCode} />
 			</div>
 		</main>
 
