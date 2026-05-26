@@ -1,0 +1,19 @@
+---
+interface Props {
+	title: string;
+	description?: string;
+	backHref?: string;
+}
+
+const { title, description, backHref = '/' } = Astro.props;
+---
+
+<header class="site-header">
+	<div class="site-header-top">
+		{backHref && (
+			<a class="back-link" href={backHref}>← Demos</a>
+		)}
+	</div>
+	<h1>{title}</h1>
+	{description && <p>{description}</p>}
+</header>

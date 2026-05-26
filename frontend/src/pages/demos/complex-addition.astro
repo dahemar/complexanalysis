@@ -1,0 +1,119 @@
+---
+import SiteHeader from '../../components/SiteHeader.astro';
+import '../../styles/global.css';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Complex addition · Argand plane</title>
+	</head>
+	<body>
+		<main class="app">
+			<SiteHeader
+				title="Complex number addition"
+				description="Sum two complex numbers and view vectors on the Argand plane."
+			/>
+
+			<div class="workspace">
+				<div class="controls">
+					<form id="complex-form">
+						<div class="complex-group">
+							<span class="group-label">a</span>
+							<div class="field">
+								<span>Re</span>
+								<input id="a-real" type="number" step="any" value="2" aria-label="a real" />
+							</div>
+							<div class="field">
+								<span>Im</span>
+								<input id="a-imag" type="number" step="any" value="1" aria-label="a imaginary" />
+							</div>
+						</div>
+						<div class="complex-group">
+							<span class="group-label">b</span>
+							<div class="field">
+								<span>Re</span>
+								<input id="b-real" type="number" step="any" value="-1" aria-label="b real" />
+							</div>
+							<div class="field">
+								<span>Im</span>
+								<input id="b-imag" type="number" step="any" value="2" aria-label="b imaginary" />
+							</div>
+						</div>
+						<button type="submit" id="submit-btn">Calculate</button>
+					</form>
+
+					<p id="result" class="result" aria-live="polite"></p>
+
+					<ul class="legend">
+						<li><span class="dot dot-a"></span> a</li>
+						<li><span class="dot dot-b"></span> b</li>
+						<li><span class="dot dot-z"></span> z = a + b</li>
+						<li>dashed = parallelogram</li>
+					</ul>
+				</div>
+
+				<div class="plot-wrap">
+					<svg id="argand" role="img" aria-label="Argand plane"></svg>
+				</div>
+			</div>
+		</main>
+
+		<script>
+			import { addComplexNumbers, formatComplex } from '../../lib/complex';
+			import { drawArgandPlane } from '../../lib/argand';
+
+			const form = document.getElementById('complex-form');
+			const resultEl = document.getElementById('result');
+			const submitBtn = document.getElementById('submit-btn');
+			const svg = document.getElementById('argand');
+
+			if (!form || !resultEl || !submitBtn || !svg) {
+				throw new Error('UI elements missing');
+			}
+
+			async function calculate() {
+				submitBtn.disabled = true;
+				resultEl.textContent = 'Computing…';
+
+				try {
+					const a = { real: readNumber('a-real'), imag: readNumber('a-imag') };
+					const b = { real: readNumber('b-real'), imag: readNumber('b-imag') };
+					const data = await addComplexNumbers(a, b);
+
+					resultEl.innerHTML = `<strong>a</strong> = ${formatComplex(data.a)} &nbsp;·&nbsp; <strong>b</strong> = ${formatComplex(data.b)} &nbsp;·&nbsp; <strong>z</strong> = ${formatComplex(data.sum)}`;
+					drawArgandPlane(svg, data);
+				} catch (err) {
+					const message = err instanceof Error ? err.message : 'Unknown error';
+					resultEl.innerHTML = `<span class="error">${message}</span>`;
+					drawArgandPlane(svg, null);
+				} finally {
+					submitBtn.disabled = false;
+				}
+			}
+
+			function readNumber(id: string): number {
+				const input = document.getElementById(id);
+				if (!(input instanceof HTMLInputElement)) {
+					throw new Error(`Missing input: ${id}`);
+				}
+				const value = Number(input.value);
+				if (!Number.isFinite(value)) {
+					throw new Error(`Invalid number: ${id}`);
+				}
+				return value;
+			}
+
+			drawArgandPlane(svg, null);
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
+				calculate();
+			});
+
+			calculate();
+		</script>
+	</body>
+</html>

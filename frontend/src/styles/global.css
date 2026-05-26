@@ -204,6 +204,146 @@ button[type='submit']:disabled {
 	display: block;
 }
 
+.site-header-top {
+	min-height: 1.1rem;
+	margin-bottom: 0.15rem;
+}
+
+.back-link {
+	font-size: 0.75rem;
+	color: var(--muted);
+	text-decoration: none;
+}
+
+.back-link:hover {
+	color: var(--text);
+}
+
+.app-index {
+	max-width: 520px;
+}
+
+.demo-list {
+	list-style: none;
+	margin: 0.5rem 0 0;
+	padding: 0;
+	border-top: 1px solid var(--border);
+}
+
+.demo-list li {
+	border-bottom: 1px solid var(--border);
+}
+
+.demo-list a {
+	display: block;
+	padding: 0.75rem 0;
+	text-decoration: none;
+	color: inherit;
+}
+
+.demo-list a:hover .demo-title {
+	text-decoration: underline;
+}
+
+.demo-title {
+	display: block;
+	font-size: 0.9375rem;
+	font-weight: 600;
+}
+
+.demo-desc {
+	display: block;
+	font-size: 0.8125rem;
+	color: var(--muted);
+	margin-top: 0.15rem;
+}
+
+.app-demo-wide {
+	max-width: 640px;
+}
+
+.demo-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.slider-row {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	font-size: 0.8125rem;
+}
+
+.slider-label {
+	color: var(--muted);
+	min-width: 5.5rem;
+}
+
+input[type='range'] {
+	flex: 1;
+	max-width: 12rem;
+	accent-color: var(--text);
+}
+
+output {
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+	min-width: 1rem;
+}
+
+.btn-row {
+	display: flex;
+	gap: 0.4rem;
+}
+
+.btn-secondary {
+	padding: 0.35rem 0.75rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--text);
+	background: #fff;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.btn-secondary:hover {
+	border-color: var(--text);
+}
+
+.note {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--muted);
+	line-height: 1.45;
+	max-width: 36rem;
+}
+
+.canvas-panels {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.canvas-panels figure {
+	margin: 0;
+}
+
+.canvas-panels figcaption {
+	font-size: 0.75rem;
+	color: var(--muted);
+	text-align: center;
+	margin-bottom: 0.35rem;
+}
+
+.canvas-panels canvas {
+	display: block;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+}
+
 @media (max-width: 720px) {
 	body {
 		overflow: auto;

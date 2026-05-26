@@ -1,0 +1,166 @@
+---
+import SiteHeader from '../../components/SiteHeader.astro';
+import '../../styles/global.css';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Contour integral · 1/zⁿ</title>
+	</head>
+	<body>
+		<main class="app app-demo-wide">
+			<SiteHeader
+				title="Contour integral around the origin"
+				description="Integrate 1/zⁿ along a circle |z| = R. Watch f(z) dz accumulate; only n = 1 gives a nonzero loop."
+			/>
+
+			<div class="demo-controls">
+				<label class="slider-row" for="exp-n">
+					<span class="slider-label">Exponent n</span>
+					<input id="exp-n" type="range" min="1" max="6" step="1" value="2" />
+					<output id="exp-n-out" for="exp-n">2</output>
+				</label>
+				<div class="btn-row">
+					<button type="button" id="btn-play" class="btn-secondary">Play</button>
+					<button type="button" id="btn-reset" class="btn-secondary">Reset</button>
+				</div>
+				<p id="theorem-note" class="note" aria-live="polite"></p>
+			</div>
+
+			<div class="canvas-panels">
+				<figure>
+					<figcaption>Curve z(t) = R e<sup>it</sup></figcaption>
+					<canvas id="panel-left" width="280" height="280" aria-label="Contour in the z-plane"></canvas>
+				</figure>
+				<figure>
+					<figcaption>Accumulated ∮ f(z) dz</figcaption>
+					<canvas id="panel-right" width="280" height="280" aria-label="Accumulated integral path"></canvas>
+				</figure>
+			</div>
+
+			<ul class="legend">
+				<li><span class="dot dot-a"></span> z(t) on the contour</li>
+				<li><span class="dot dot-b"></span> integrand direction</li>
+				<li><span class="dot dot-z"></span> accumulated integral</li>
+			</ul>
+		</main>
+
+		<script>
+			import {
+				DT,
+				PATH_SCALE,
+				RADIUS,
+				drawLeftPanel,
+				drawPanel,
+				drawRightPanel,
+				expectedResidueNote,
+				integrand,
+			} from '../../lib/contourIntegral';
+
+			const canvasLeft = document.getElementById('panel-left');
+			const canvasRight = document.getElementById('panel-right');
+			const slider = document.getElementById('exp-n');
+			const output = document.getElementById('exp-n-out');
+			const note = document.getElementById('theorem-note');
+			const btnPlay = document.getElementById('btn-play');
+			const btnReset = document.getElementById('btn-reset');
+
+			if (
+				!(canvasLeft instanceof HTMLCanvasElement) ||
+				!(canvasRight instanceof HTMLCanvasElement) ||
+				!(slider instanceof HTMLInputElement) ||
+				!(output instanceof HTMLOutputElement) ||
+				!(note instanceof HTMLParagraphElement) ||
+				!(btnPlay instanceof HTMLButtonElement) ||
+				!(btnReset instanceof HTMLButtonElement)
+			) {
+				throw new Error('Contour demo UI missing');
+			}
+
+			const ctxL = canvasLeft.getContext('2d');
+			const ctxR = canvasRight.getContext('2d');
+			if (!ctxL || !ctxR) throw new Error('Canvas unsupported');
+
+			const PANEL = 280;
+			const CX = PANEL / 2;
+			const CY = PANEL / 2;
+			const TAU = Math.PI * 2;
+
+			let n = Number(slider.value);
+			let t = 0;
+			let path: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+			let playing = true;
+			let raf = 0;
+
+			function updateNote() {
+				output.textContent = String(n);
+				note.textContent = expectedResidueNote(n);
+			}
+
+			function resetSim() {
+				t = 0;
+				path = [{ x: 0, y: 0 }];
+				playing = true;
+				btnPlay.textContent = 'Pause';
+			}
+
+			function drawFrame() {
+				ctxL.clearRect(0, 0, PANEL, PANEL);
+				ctxR.clearRect(0, 0, PANEL, PANEL);
+
+				drawPanel(ctxL, CX, CY, PANEL);
+				drawPanel(ctxR, CX, CY, PANEL);
+				drawLeftPanel(ctxL, CX, CY, n, t);
+				drawRightPanel(ctxR, CX, CY, path);
+			}
+
+			function tick() {
+				if (playing && t < TAU) {
+					const v = integrand(n, RADIUS, t);
+					const last = path[path.length - 1];
+					path.push({
+						x: last.x + PATH_SCALE * v.x * DT * 55,
+						y: last.y - PATH_SCALE * v.y * DT * 55,
+					});
+					t += DT;
+				}
+
+				drawFrame();
+
+				if (t >= TAU) {
+					playing = false;
+					btnPlay.textContent = 'Replay';
+				}
+
+				raf = requestAnimationFrame(tick);
+			}
+
+			slider.addEventListener('input', () => {
+				n = Number(slider.value);
+				updateNote();
+				resetSim();
+			});
+
+			btnPlay.addEventListener('click', () => {
+				if (t >= TAU) {
+					resetSim();
+					return;
+				}
+				playing = !playing;
+				btnPlay.textContent = playing ? 'Pause' : 'Play';
+			});
+
+			btnReset.addEventListener('click', () => {
+				resetSim();
+			});
+
+			updateNote();
+			resetSim();
+			tick();
+		</script>
+	</body>
+</html>
