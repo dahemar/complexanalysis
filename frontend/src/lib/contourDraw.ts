@@ -112,6 +112,22 @@ export function drawContourPanel(
 	ctx.restore();
 }
 
+/** Scale integral-plane coordinates to fit the canvas (values are O(2π), not O(R)). */
+export function scaleIntegralPath(path: Complex[], panelHalf: number): CanvasPoint[] {
+	if (path.length === 0) return [];
+
+	let maxAbs = 1e-6;
+	for (const p of path) {
+		maxAbs = Math.max(maxAbs, Math.abs(p.real), Math.abs(p.imag));
+	}
+	const scale = (panelHalf - 18) / maxAbs;
+
+	return path.map((p) => ({
+		x: p.real * scale,
+		y: -p.imag * scale,
+	}));
+}
+
 export function drawIntegralPanel(
 	ctx: CanvasRenderingContext2D,
 	cx: number,

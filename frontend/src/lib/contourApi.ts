@@ -8,6 +8,8 @@ export type ContourTrace = {
 	steps: number;
 	integrand_scale: number;
 	note: string;
+	closed_integral: Complex;
+	closed_label: string;
 	z_points: Complex[];
 	integrand_points: Complex[];
 	path: Complex[];

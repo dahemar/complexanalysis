@@ -65,11 +65,12 @@ const mathCode = readPythonModule('contour_integral.py');
 
 		<script>
 			import { fetchContourTrace, type ContourTrace } from '../../lib/contourApi';
+			import { formatComplex } from '../../lib/complex';
 			import {
 				drawContourPanel,
 				drawGrid,
 				drawIntegralPanel,
-				toCanvas,
+				scaleIntegralPath,
 			} from '../../lib/contourDraw';
 
 			const canvasLeft = document.getElementById('panel-left');
@@ -117,7 +118,7 @@ const mathCode = readPythonModule('contour_integral.py');
 				const t = idx * trace.dt;
 				const z = trace.z_points[idx];
 				const ing = trace.integrand_points[idx];
-				const path = trace.path.slice(0, idx + 1).map(toCanvas);
+				const path = scaleIntegralPath(trace.path.slice(0, idx + 1), PANEL / 2);
 
 				ctxL.clearRect(0, 0, PANEL, PANEL);
 				ctxR.clearRect(0, 0, PANEL, PANEL);
@@ -134,6 +135,16 @@ const mathCode = readPythonModule('contour_integral.py');
 				const deg = ((t * 180) / Math.PI).toFixed(0);
 				outT.textContent = `${deg}° · ${t.toFixed(2)} rad`;
 				note.textContent = trace.note;
+
+				const current = trace.path[stepIndex];
+				const partial = formatComplex(current);
+				if (stepIndex >= trace.steps) {
+					status.textContent = `∮ = ${trace.closed_label}  (${partial})`;
+				} else if (trace.n === 1) {
+					status.textContent = `Partial: ${partial}  →  ∮ = ${trace.closed_label}`;
+				} else {
+					status.textContent = `Partial: ${partial}`;
+				}
 			}
 
 			async function loadTrace(n: number) {
@@ -148,7 +159,7 @@ const mathCode = readPythonModule('contour_integral.py');
 					sliderT.max = String(trace.steps);
 					stepIndex = 0;
 					sliderT.value = '0';
-					status.textContent = 'Drag θ or press Play.';
+					status.textContent = 'Drag θ or press Play to complete the contour.';
 					render();
 					updateLabels();
 				} catch (err) {
