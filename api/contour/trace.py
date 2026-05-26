@@ -6,7 +6,7 @@ import sys
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, os.path.join(_ROOT, "backend"))
 
-from app.complex_math import ComplexPoint, add_complex  # noqa: E402
+from app.contour_integral import RADIUS, trace_contour  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -18,10 +18,12 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length).decode("utf-8")
             body = json.loads(raw)
-            a = ComplexPoint(real=float(body["a"]["real"]), imag=float(body["a"]["imag"]))
-            b = ComplexPoint(real=float(body["b"]["real"]), imag=float(body["b"]["imag"]))
-            total = add_complex(a, b)
-            payload = {"a": a.as_dict(), "b": b.as_dict(), "sum": total.as_dict()}
+            n = int(body["n"])
+            R = float(body.get("R", RADIUS))
+            steps = int(body.get("steps", 240))
+            if n < 1 or n > 12:
+                raise ValueError("n must be between 1 and 12")
+            payload = trace_contour(n=n, R=R, steps=steps)
             self._respond(200, json.dumps(payload).encode("utf-8"))
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             self._respond(400, json.dumps({"error": str(exc)}).encode("utf-8"))

@@ -1,6 +1,11 @@
 ---
+import PythonPanel from '../../components/PythonPanel.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
+import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
+
+const mathCode = readPythonModule('contour_integral.py');
+const apiCode = readPythonModule('main.py');
 ---
 
 <html lang="en">
@@ -12,10 +17,10 @@ import '../../styles/global.css';
 		<title>Contour integral · 1/zⁿ</title>
 	</head>
 	<body>
-		<main class="app app-demo-wide">
+		<main class="app app-scroll app-demo-wide">
 			<SiteHeader
 				title="Contour integral around the origin"
-				description="Integrate 1/zⁿ along a circle |z| = R. Watch f(z) dz accumulate; only n = 1 gives a nonzero loop."
+				description="∮ 1/zⁿ dz along |z| = R. Drag θ to move along the circle; the path is computed in Python."
 			/>
 
 			<div class="demo-controls">
@@ -24,57 +29,71 @@ import '../../styles/global.css';
 					<input id="exp-n" type="range" min="1" max="6" step="1" value="2" />
 					<output id="exp-n-out" for="exp-n">2</output>
 				</label>
+				<label class="slider-row" for="param-t">
+					<span class="slider-label">Angle θ</span>
+					<input id="param-t" type="range" min="0" max="240" step="1" value="0" />
+					<output id="param-t-out" for="param-t">0°</output>
+				</label>
 				<div class="btn-row">
 					<button type="button" id="btn-play" class="btn-secondary">Play</button>
 					<button type="button" id="btn-reset" class="btn-secondary">Reset</button>
 				</div>
-				<p id="theorem-note" class="note" aria-live="polite"></p>
+				<p id="status" class="status" aria-live="polite"></p>
+				<p id="theorem-note" class="note"></p>
 			</div>
 
 			<div class="canvas-panels">
-				<figure>
-					<figcaption>Curve z(t) = R e<sup>it</sup></figcaption>
-					<canvas id="panel-left" width="280" height="280" aria-label="Contour in the z-plane"></canvas>
+				<figure class="canvas-card">
+					<figcaption>Contour z(t) = R e<sup>iθ</sup></figcaption>
+					<canvas id="panel-left" width="300" height="300" aria-label="Contour in the z-plane"></canvas>
 				</figure>
-				<figure>
+				<figure class="canvas-card">
 					<figcaption>Accumulated ∮ f(z) dz</figcaption>
-					<canvas id="panel-right" width="280" height="280" aria-label="Accumulated integral path"></canvas>
+					<canvas id="panel-right" width="300" height="300" aria-label="Accumulated integral"></canvas>
 				</figure>
 			</div>
 
 			<ul class="legend">
-				<li><span class="dot dot-a"></span> z(t) on the contour</li>
+				<li><span class="dot dot-a"></span> z(θ) and traced arc</li>
 				<li><span class="dot dot-b"></span> integrand direction</li>
 				<li><span class="dot dot-z"></span> accumulated integral</li>
 			</ul>
+
+			<div class="python-stack">
+				<PythonPanel title="Core math" filename="backend/app/contour_integral.py" code={mathCode} />
+				<PythonPanel title="API route" filename="backend/app/main.py" code={apiCode} />
+			</div>
 		</main>
 
 		<script>
+			import { fetchContourTrace, type ContourTrace } from '../../lib/contourApi';
 			import {
-				DT,
-				PATH_SCALE,
-				RADIUS,
-				drawLeftPanel,
-				drawPanel,
-				drawRightPanel,
-				expectedResidueNote,
-				integrand,
-			} from '../../lib/contourIntegral';
+				drawContourPanel,
+				drawGrid,
+				drawIntegralPanel,
+				toCanvas,
+			} from '../../lib/contourDraw';
 
 			const canvasLeft = document.getElementById('panel-left');
 			const canvasRight = document.getElementById('panel-right');
-			const slider = document.getElementById('exp-n');
-			const output = document.getElementById('exp-n-out');
+			const sliderN = document.getElementById('exp-n');
+			const sliderT = document.getElementById('param-t');
+			const outN = document.getElementById('exp-n-out');
+			const outT = document.getElementById('param-t-out');
 			const note = document.getElementById('theorem-note');
+			const status = document.getElementById('status');
 			const btnPlay = document.getElementById('btn-play');
 			const btnReset = document.getElementById('btn-reset');
 
 			if (
 				!(canvasLeft instanceof HTMLCanvasElement) ||
 				!(canvasRight instanceof HTMLCanvasElement) ||
-				!(slider instanceof HTMLInputElement) ||
-				!(output instanceof HTMLOutputElement) ||
+				!(sliderN instanceof HTMLInputElement) ||
+				!(sliderT instanceof HTMLInputElement) ||
+				!(outN instanceof HTMLOutputElement) ||
+				!(outT instanceof HTMLOutputElement) ||
 				!(note instanceof HTMLParagraphElement) ||
+				!(status instanceof HTMLParagraphElement) ||
 				!(btnPlay instanceof HTMLButtonElement) ||
 				!(btnReset instanceof HTMLButtonElement)
 			) {
@@ -85,69 +104,99 @@ import '../../styles/global.css';
 			const ctxR = canvasRight.getContext('2d');
 			if (!ctxL || !ctxR) throw new Error('Canvas unsupported');
 
-			const PANEL = 280;
+			const PANEL = 300;
 			const CX = PANEL / 2;
 			const CY = PANEL / 2;
-			const TAU = Math.PI * 2;
 
-			let n = Number(slider.value);
-			let t = 0;
-			let path: { x: number; y: number }[] = [{ x: 0, y: 0 }];
-			let playing = true;
+			let trace: ContourTrace | null = null;
+			let stepIndex = 0;
+			let playing = false;
 			let raf = 0;
 
-			function updateNote() {
-				output.textContent = String(n);
-				note.textContent = expectedResidueNote(n);
-			}
+			function render() {
+				if (!trace) return;
+				const idx = stepIndex;
+				const t = idx * trace.dt;
+				const z = trace.z_points[idx];
+				const ing = trace.integrand_points[idx];
+				const path = trace.path.slice(0, idx + 1).map(toCanvas);
 
-			function resetSim() {
-				t = 0;
-				path = [{ x: 0, y: 0 }];
-				playing = true;
-				btnPlay.textContent = 'Pause';
-			}
-
-			function drawFrame() {
 				ctxL.clearRect(0, 0, PANEL, PANEL);
 				ctxR.clearRect(0, 0, PANEL, PANEL);
+				drawGrid(ctxL, CX, CY, PANEL);
+				drawGrid(ctxR, CX, CY, PANEL);
+				drawContourPanel(ctxL, CX, CY, trace.R, t, z, ing, trace.integrand_scale);
+				drawIntegralPanel(ctxR, CX, CY, path);
+			}
 
-				drawPanel(ctxL, CX, CY, PANEL);
-				drawPanel(ctxR, CX, CY, PANEL);
-				drawLeftPanel(ctxL, CX, CY, n, t);
-				drawRightPanel(ctxR, CX, CY, path);
+			function updateLabels() {
+				if (!trace) return;
+				outN.textContent = String(trace.n);
+				const t = stepIndex * trace.dt;
+				const deg = ((t * 180) / Math.PI).toFixed(0);
+				outT.textContent = `${deg}° · ${t.toFixed(2)} rad`;
+				note.textContent = trace.note;
+			}
+
+			async function loadTrace(n: number) {
+				playing = false;
+				btnPlay.textContent = 'Play';
+				status.textContent = 'Computing trace in Python…';
+				sliderN.disabled = true;
+				sliderT.disabled = true;
+
+				try {
+					trace = await fetchContourTrace(n);
+					sliderT.max = String(trace.steps);
+					stepIndex = 0;
+					sliderT.value = '0';
+					status.textContent = 'Drag θ or press Play.';
+					render();
+					updateLabels();
+				} catch (err) {
+					const msg = err instanceof Error ? err.message : 'Unknown error';
+					status.innerHTML = `<span class="error">${msg}</span>`;
+				} finally {
+					sliderN.disabled = false;
+					sliderT.disabled = false;
+				}
 			}
 
 			function tick() {
-				if (playing && t < TAU) {
-					const v = integrand(n, RADIUS, t);
-					const last = path[path.length - 1];
-					path.push({
-						x: last.x + PATH_SCALE * v.x * DT * 55,
-						y: last.y - PATH_SCALE * v.y * DT * 55,
-					});
-					t += DT;
+				if (playing && trace && stepIndex < trace.steps) {
+					stepIndex += 1;
+					sliderT.value = String(stepIndex);
+					updateLabels();
+					render();
 				}
-
-				drawFrame();
-
-				if (t >= TAU) {
+				if (trace && stepIndex >= trace.steps) {
 					playing = false;
 					btnPlay.textContent = 'Replay';
 				}
-
 				raf = requestAnimationFrame(tick);
 			}
 
-			slider.addEventListener('input', () => {
-				n = Number(slider.value);
-				updateNote();
-				resetSim();
+			sliderN.addEventListener('input', () => {
+				loadTrace(Number(sliderN.value));
+			});
+
+			sliderT.addEventListener('input', () => {
+				playing = false;
+				btnPlay.textContent = trace && stepIndex >= trace.steps ? 'Replay' : 'Play';
+				stepIndex = Number(sliderT.value);
+				updateLabels();
+				render();
 			});
 
 			btnPlay.addEventListener('click', () => {
-				if (t >= TAU) {
-					resetSim();
+				if (!trace) return;
+				if (stepIndex >= trace.steps) {
+					stepIndex = 0;
+					sliderT.value = '0';
+					playing = true;
+					btnPlay.textContent = 'Pause';
+					updateLabels();
+					render();
 					return;
 				}
 				playing = !playing;
@@ -155,11 +204,16 @@ import '../../styles/global.css';
 			});
 
 			btnReset.addEventListener('click', () => {
-				resetSim();
+				if (!trace) return;
+				playing = false;
+				stepIndex = 0;
+				sliderT.value = '0';
+				btnPlay.textContent = 'Play';
+				updateLabels();
+				render();
 			});
 
-			updateNote();
-			resetSim();
+			loadTrace(Number(sliderN.value));
 			tick();
 		</script>
 	</body>

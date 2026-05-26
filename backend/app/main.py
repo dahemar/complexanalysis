@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from app.complex_math import ComplexPoint, add_complex
+from app.contour_integral import RADIUS, trace_contour
 
 app = FastAPI(title="Complex Analysis API", version="0.1.0")
 
@@ -43,3 +44,14 @@ def complex_add(body: AddRequest) -> AddResponse:
     b = ComplexPoint(real=body.b.real, imag=body.b.imag)
     total = add_complex(a, b)
     return AddResponse(a=a.as_dict(), b=b.as_dict(), sum=total.as_dict())
+
+
+class ContourTraceRequest(BaseModel):
+    n: int = Field(ge=1, le=12, description="Exponent in 1/z^n")
+    R: float = Field(default=RADIUS, gt=0, description="Contour radius")
+    steps: int = Field(default=240, ge=8, le=480, description="Sample count")
+
+
+@app.post("/api/contour/trace")
+def contour_trace(body: ContourTraceRequest) -> dict:
+    return trace_contour(n=body.n, R=body.R, steps=body.steps)

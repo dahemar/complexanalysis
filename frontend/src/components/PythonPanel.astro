@@ -1,0 +1,17 @@
+---
+interface Props {
+	title: string;
+	filename: string;
+	code: string;
+}
+
+const { title, filename, code } = Astro.props;
+---
+
+<section class="python-panel">
+	<div class="python-panel-head">
+		<h2>{title}</h2>
+		<span class="python-filename">{filename}</span>
+	</div>
+	<pre class="python-code"><code>{code}</code></pre>
+</section>

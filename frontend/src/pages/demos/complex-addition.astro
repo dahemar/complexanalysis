@@ -1,6 +1,11 @@
 ---
+import PythonPanel from '../../components/PythonPanel.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
+import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
+
+const mathCode = readPythonModule('complex_math.py');
+const apiCode = readPythonModule('main.py');
 ---
 
 <html lang="en">
@@ -12,10 +17,10 @@ import '../../styles/global.css';
 		<title>Complex addition · Argand plane</title>
 	</head>
 	<body>
-		<main class="app">
+		<main class="app app-scroll">
 			<SiteHeader
 				title="Complex number addition"
-				description="Sum two complex numbers and view vectors on the Argand plane."
+				description="Sum two complex numbers; the Python backend returns components for the Argand plot."
 			/>
 
 			<div class="workspace">
@@ -60,6 +65,11 @@ import '../../styles/global.css';
 					<svg id="argand" role="img" aria-label="Argand plane"></svg>
 				</div>
 			</div>
+
+			<div class="python-stack">
+				<PythonPanel title="Core math" filename="backend/app/complex_math.py" code={mathCode} />
+				<PythonPanel title="API routes" filename="backend/app/main.py" code={apiCode} />
+			</div>
 		</main>
 
 		<script>
@@ -77,7 +87,7 @@ import '../../styles/global.css';
 
 			async function calculate() {
 				submitBtn.disabled = true;
-				resultEl.textContent = 'Computing…';
+				resultEl.textContent = 'Computing in Python…';
 
 				try {
 					const a = { real: readNumber('a-real'), imag: readNumber('a-imag') };

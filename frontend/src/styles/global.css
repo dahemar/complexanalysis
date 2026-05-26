@@ -29,6 +29,10 @@ html {
 
 body {
 	margin: 0;
+	min-height: 100vh;
+}
+
+body:has(.app:not(.app-scroll)) {
 	height: 100vh;
 	overflow: hidden;
 }
@@ -258,8 +262,15 @@ button[type='submit']:disabled {
 	margin-top: 0.15rem;
 }
 
+.app-scroll {
+	height: auto;
+	min-height: 100vh;
+	overflow: visible;
+	padding-bottom: 2rem;
+}
+
 .app-demo-wide {
-	max-width: 640px;
+	max-width: 720px;
 }
 
 .demo-controls {
@@ -282,8 +293,14 @@ button[type='submit']:disabled {
 
 input[type='range'] {
 	flex: 1;
-	max-width: 12rem;
+	max-width: 14rem;
 	accent-color: var(--text);
+	cursor: pointer;
+}
+
+input[type='range']:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
 }
 
 output {
@@ -320,28 +337,98 @@ output {
 	max-width: 36rem;
 }
 
+.status {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.status .error {
+	color: #c0392b;
+}
+
 .canvas-panels {
 	display: flex;
-	gap: 1rem;
+	gap: 1.25rem;
 	flex-wrap: wrap;
 	justify-content: center;
 }
 
-.canvas-panels figure {
+.canvas-card {
+	margin: 0;
+	padding: 0.65rem 0.65rem 0.5rem;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: #fafafa;
+	box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.canvas-card figcaption {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--muted);
+	text-align: center;
+	margin-bottom: 0.45rem;
+}
+
+.canvas-card canvas {
+	display: block;
+	border-radius: 4px;
+	background: #fff;
+}
+
+#param-t-out {
+	min-width: 7.5rem;
+	text-align: right;
+}
+
+.python-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-top: 1.25rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--border);
+}
+
+.python-panel {
 	margin: 0;
 }
 
-.canvas-panels figcaption {
-	font-size: 0.75rem;
-	color: var(--muted);
-	text-align: center;
-	margin-bottom: 0.35rem;
+.python-panel-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.4rem;
 }
 
-.canvas-panels canvas {
-	display: block;
+.python-panel h2 {
+	margin: 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+
+.python-filename {
+	font-size: 0.6875rem;
+	color: var(--muted);
+	font-family: ui-monospace, Menlo, monospace;
+}
+
+.python-code {
+	margin: 0;
+	padding: 0.85rem 1rem;
+	font-size: 0.6875rem;
+	line-height: 1.5;
+	overflow-x: auto;
+	background: #f6f6f6;
 	border: 1px solid var(--border);
-	border-radius: 4px;
+	border-radius: 6px;
+	color: #222;
+}
+
+.python-code code {
+	font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 @media (max-width: 720px) {
