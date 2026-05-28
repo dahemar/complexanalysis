@@ -6,7 +6,15 @@ export type AddResult = {
 	sum: Complex;
 };
 
+const TAU = 2 * Math.PI;
+
 export function formatComplex(z: Complex): string {
+	if (Math.abs(z.real) < 1e-9 && Math.abs(z.imag - TAU) < 1e-6) {
+		return '2πi';
+	}
+	if (Math.abs(z.real) < 1e-9 && Math.abs(z.imag) < 1e-9) {
+		return '0';
+	}
 	const sign = z.imag >= 0 ? '+' : '−';
 	const imag = Math.abs(z.imag);
 	const imagStr =
@@ -15,6 +23,9 @@ export function formatComplex(z: Complex): string {
 		return `${trim(z.real)}`;
 	}
 	if (z.real === 0) {
+		const t = Math.abs(z.imag);
+		if (Math.abs(t - Math.PI) < 1e-6) return 'πi';
+		if (Math.abs(t - TAU) < 1e-6) return '2πi';
 		return z.imag === 1 ? 'i' : z.imag === -1 ? '−i' : `${trim(z.imag)}i`;
 	}
 	return `${trim(z.real)} ${sign} ${imagStr}`.replace('− −', '− ');

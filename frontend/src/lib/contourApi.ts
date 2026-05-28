@@ -7,6 +7,7 @@ export type ContourTrace = {
 	dt: number;
 	steps: number;
 	integrand_scale: number;
+	display_extent: number;
 	note: string;
 	closed_integral: Complex;
 	closed_label: string;

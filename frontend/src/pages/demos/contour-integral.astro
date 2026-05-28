@@ -118,7 +118,11 @@ const mathCode = readPythonModule('contour_integral.py');
 				const t = idx * trace.dt;
 				const z = trace.z_points[idx];
 				const ing = trace.integrand_points[idx];
-				const path = scaleIntegralPath(trace.path.slice(0, idx + 1), PANEL / 2);
+				const path = scaleIntegralPath(
+					trace.path.slice(0, idx + 1),
+					PANEL / 2,
+					trace.display_extent,
+				);
 
 				ctxL.clearRect(0, 0, PANEL, PANEL);
 				ctxR.clearRect(0, 0, PANEL, PANEL);
@@ -139,11 +143,11 @@ const mathCode = readPythonModule('contour_integral.py');
 				const current = trace.path[stepIndex];
 				const partial = formatComplex(current);
 				if (stepIndex >= trace.steps) {
-					status.textContent = `∮ = ${trace.closed_label}  (${partial})`;
+					status.textContent = `∮ = ${trace.closed_label}`;
 				} else if (trace.n === 1) {
-					status.textContent = `Partial: ${partial}  →  ∮ = ${trace.closed_label}`;
+					status.textContent = `∫₀^θ = ${partial}  →  ∮ = 2πi`;
 				} else {
-					status.textContent = `Partial: ${partial}`;
+					status.textContent = `∫₀^θ = ${partial}  →  ∮ = 0`;
 				}
 			}
 

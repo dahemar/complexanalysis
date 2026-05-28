@@ -19,28 +19,33 @@ def z_on_circle(R: float, t: float) -> ComplexPoint:
 
 def integrand(n: int, R: float, t: float) -> ComplexPoint:
     """
-    Integrand f(z) dz/dt for f(z) = 1/z^n and z(t) = R e^{it}.
-
-    With z = R e^{it}: dz = i R e^{it} dt and 1/z^n = R^{-n} e^{-int},
-    so dz/dt · 1/z^n = i R^{1-n} e^{-i(n-1)t}.
+    (dz/dt) · 1/z^n for z(t) = R e^{it}, i.e. i R^{1-n} e^{-i(n-1)t}.
     """
     mag = R ** (1 - n)
     angle = -(n - 1) * t
     return ComplexPoint(real=-mag * math.sin(angle), imag=mag * math.cos(angle))
 
 
-def closed_contour_integral(n: int) -> ComplexPoint:
-    """Exact value of ∮_{|z|=R} 1/z^n dz (R > 0, origin inside)."""
-    if n == 1:
-        return ComplexPoint(0.0, TAU)  # 2πi
-    return ComplexPoint(0.0, 0.0)
+def integral_up_to_t(n: int, R: float, t: float) -> ComplexPoint:
+    """
+    Exact ∫_0^t (dz/dt) / z^n dt'.
 
-
-def integral_up_to_t(n: int, R: float, t: float, euler: ComplexPoint) -> ComplexPoint:
-    """∫_0^t f(z) dz; exact for n = 1 where the integrand is constant i."""
+    n = 1: ∫ i dt' = i t'.
+    n ≠ 1: R^{1-n} (1 - e^{-i(n-1)t'}) / (n - 1).
+    """
     if n == 1:
         return ComplexPoint(0.0, t)
-    return euler
+    k = n - 1
+    coeff = R ** (1 - n) / k
+    return ComplexPoint(
+        real=coeff * (1.0 - math.cos(k * t)),
+        imag=coeff * math.sin(k * t),
+    )
+
+
+def closed_contour_integral(n: int) -> ComplexPoint:
+    """∮_{|z|=R} 1/z^n dz with the origin inside the contour."""
+    return integral_up_to_t(n, RADIUS, TAU)
 
 
 def residue_note(n: int) -> str:
@@ -49,33 +54,37 @@ def residue_note(n: int) -> str:
     return f"∮_C 1/z^{n} dz = 0 (pole at 0 has order {n})."
 
 
+def _display_extent(path: list[ComplexPoint], n: int) -> float:
+    """Fixed vertical scale for the integral panel (avoids jumping while scrubbing θ)."""
+    if n == 1:
+        return TAU
+    peak = max(
+        (max(abs(p.real), abs(p.imag)) for p in path),
+        default=0.0,
+    )
+    return max(0.2, peak * 1.15)
+
+
 def trace_contour(
     n: int,
     R: float = RADIUS,
     steps: int = DEFAULT_STEPS,
 ) -> dict:
-    """Sample the contour and accumulate ∫ f(z) dz from 0 to t."""
     steps = max(8, min(steps, 480))
     dt = TAU / steps
 
-    path: list[ComplexPoint] = [ComplexPoint(0.0, 0.0)]
+    path: list[ComplexPoint] = []
     z_points: list[ComplexPoint] = []
     integrand_points: list[ComplexPoint] = []
 
     for i in range(steps + 1):
         t = min(i * dt, TAU)
         z_points.append(z_on_circle(R, t))
-        ing = integrand(n, R, t)
-        integrand_points.append(ing)
-        if i > 0:
-            last = path[-1]
-            euler = ComplexPoint(
-                real=last.real + ing.real * dt,
-                imag=last.imag + ing.imag * dt,
-            )
-            path.append(integral_up_to_t(n, R, t, euler))
+        integrand_points.append(integrand(n, R, t))
+        path.append(integral_up_to_t(n, R, t))
 
-    closed = closed_contour_integral(n)
+    closed = integral_up_to_t(n, R, TAU)
+    extent = _display_extent(path, n)
 
     return {
         "n": n,
@@ -84,6 +93,7 @@ def trace_contour(
         "dt": dt,
         "steps": steps,
         "integrand_scale": INTEGRAND_SCALE,
+        "display_extent": extent,
         "note": residue_note(n),
         "closed_integral": closed.as_dict(),
         "closed_label": "2πi" if n == 1 else "0",
