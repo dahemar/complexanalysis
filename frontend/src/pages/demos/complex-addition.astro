@@ -1,10 +1,6 @@
 ---
-import PythonPanel from '../../components/PythonPanel.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
-import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
-
-const mathCode = readPythonModule('complex_math.py');
 ---
 
 <html lang="en">
@@ -66,7 +62,18 @@ const mathCode = readPythonModule('complex_math.py');
 			</div>
 
 			<div class="python-stack">
-				<PythonPanel title="Python" filename="backend/app/complex_math.py" code={mathCode} />
+				<section class="python-panel">
+					<div class="python-panel-head">
+						<h2>Matplotlib</h2>
+						<span class="python-filename">backend/app/complex_math.py</span>
+					</div>
+					<img
+						id="matplotlib-plot"
+						class="mpl-plot"
+						alt="Matplotlib Argand plane"
+					/>
+					<p id="matplotlib-placeholder" class="note">Compute to generate a matplotlib comparison plot.</p>
+				</section>
 			</div>
 		</main>
 
@@ -78,6 +85,8 @@ const mathCode = readPythonModule('complex_math.py');
 			const resultEl = document.getElementById('result');
 			const submitBtn = document.getElementById('submit-btn');
 			const svg = document.getElementById('argand');
+			const mplImg = document.getElementById('matplotlib-plot');
+			const mplPlaceholder = document.getElementById('matplotlib-placeholder');
 
 			if (!form || !resultEl || !submitBtn || !svg) {
 				throw new Error('UI elements missing');
@@ -94,6 +103,12 @@ const mathCode = readPythonModule('complex_math.py');
 
 					resultEl.innerHTML = `<strong>a</strong> = ${formatComplex(data.a)} &nbsp;·&nbsp; <strong>b</strong> = ${formatComplex(data.b)} &nbsp;·&nbsp; <strong>z</strong> = ${formatComplex(data.sum)}`;
 					drawArgandPlane(svg, data);
+
+					if (mplImg instanceof HTMLImageElement && mplPlaceholder instanceof HTMLParagraphElement) {
+						mplImg.src = `data:image/png;base64,${data.plot_base64}`;
+						mplImg.hidden = false;
+						mplPlaceholder.hidden = true;
+					}
 				} catch (err) {
 					const message = err instanceof Error ? err.message : 'Unknown error';
 					resultEl.innerHTML = `<span class="error">${message}</span>`;

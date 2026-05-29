@@ -431,6 +431,13 @@ output {
 	font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
+.mpl-plot {
+	display: block;
+	max-width: 100%;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+}
+
 @media (max-width: 720px) {
 	body {
 		overflow: auto;

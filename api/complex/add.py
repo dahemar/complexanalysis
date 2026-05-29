@@ -6,7 +6,7 @@ import sys
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, os.path.join(_ROOT, "backend"))
 
-from app.complex_math import ComplexPoint, add_complex  # noqa: E402
+from app.complex_math import ComplexPoint, add_complex, plot_argand_base64  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -21,7 +21,7 @@ class handler(BaseHTTPRequestHandler):
             a = ComplexPoint(real=float(body["a"]["real"]), imag=float(body["a"]["imag"]))
             b = ComplexPoint(real=float(body["b"]["real"]), imag=float(body["b"]["imag"]))
             total = add_complex(a, b)
-            payload = {"a": a.as_dict(), "b": b.as_dict(), "sum": total.as_dict()}
+            payload = {"a": a.as_dict(), "b": b.as_dict(), "sum": total.as_dict(), "plot_base64": plot_argand_base64(a, b, total)}
             self._respond(200, json.dumps(payload).encode("utf-8"))
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             self._respond(400, json.dumps({"error": str(exc)}).encode("utf-8"))

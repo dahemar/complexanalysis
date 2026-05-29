@@ -14,6 +14,7 @@ export type ContourTrace = {
 	z_points: Complex[];
 	integrand_points: Complex[];
 	path: Complex[];
+	plot_base64: string;
 };
 
 const apiBase = import.meta.env.PUBLIC_API_URL?.replace(/\/$/, '') ?? '';

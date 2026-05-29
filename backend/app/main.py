@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.complex_math import ComplexPoint, add_complex
-from app.contour_integral import RADIUS, trace_contour
+from app.complex_math import ComplexPoint, add_complex, plot_argand_base64
+from app.contour_integral import RADIUS, plot_contour_base64, trace_contour
 
 app = FastAPI(title="Complex Analysis API", version="0.1.0")
 
@@ -31,6 +31,7 @@ class AddResponse(BaseModel):
     a: dict[str, float]
     b: dict[str, float]
     sum: dict[str, float]
+    plot_base64: str
 
 
 @app.get("/health")
@@ -43,7 +44,12 @@ def complex_add(body: AddRequest) -> AddResponse:
     a = ComplexPoint(real=body.a.real, imag=body.a.imag)
     b = ComplexPoint(real=body.b.real, imag=body.b.imag)
     total = add_complex(a, b)
-    return AddResponse(a=a.as_dict(), b=b.as_dict(), sum=total.as_dict())
+    return AddResponse(
+        a=a.as_dict(),
+        b=b.as_dict(),
+        sum=total.as_dict(),
+        plot_base64=plot_argand_base64(a, b, total),
+    )
 
 
 class ContourTraceRequest(BaseModel):
@@ -54,4 +60,6 @@ class ContourTraceRequest(BaseModel):
 
 @app.post("/api/contour/trace")
 def contour_trace(body: ContourTraceRequest) -> dict:
-    return trace_contour(n=body.n, R=body.R, steps=body.steps)
+    data = trace_contour(n=body.n, R=body.R, steps=body.steps)
+    data["plot_base64"] = plot_contour_base64(data)
+    return data

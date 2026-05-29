@@ -1,10 +1,6 @@
 ---
-import PythonPanel from '../../components/PythonPanel.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
-import { readPythonModule } from '../../lib/pythonSource';
 import '../../styles/global.css';
-
-const mathCode = readPythonModule('contour_integral.py');
 ---
 
 <html lang="en">
@@ -59,7 +55,18 @@ const mathCode = readPythonModule('contour_integral.py');
 			</ul>
 
 			<div class="python-stack">
-				<PythonPanel title="Python" filename="backend/app/contour_integral.py" code={mathCode} />
+				<section class="python-panel">
+					<div class="python-panel-head">
+						<h2>Matplotlib</h2>
+						<span class="python-filename">backend/app/contour_integral.py</span>
+					</div>
+					<img
+						id="matplotlib-plot"
+						class="mpl-plot"
+						alt="Matplotlib contour integral plot"
+					/>
+					<p id="matplotlib-placeholder" class="note">Load a trace to generate a matplotlib comparison plot.</p>
+				</section>
 			</div>
 		</main>
 
@@ -83,6 +90,8 @@ const mathCode = readPythonModule('contour_integral.py');
 			const status = document.getElementById('status');
 			const btnPlay = document.getElementById('btn-play');
 			const btnReset = document.getElementById('btn-reset');
+			const mplImg = document.getElementById('matplotlib-plot');
+			const mplPlaceholder = document.getElementById('matplotlib-placeholder');
 
 			if (
 				!(canvasLeft instanceof HTMLCanvasElement) ||
@@ -172,6 +181,12 @@ const mathCode = readPythonModule('contour_integral.py');
 					status.textContent = 'Drag θ or press Play to complete the contour.';
 					render();
 					updateLabels();
+
+					if (mplImg instanceof HTMLImageElement && mplPlaceholder instanceof HTMLParagraphElement) {
+						mplImg.src = `data:image/png;base64,${trace.plot_base64}`;
+						mplImg.hidden = false;
+						mplPlaceholder.hidden = true;
+					}
 				} catch (err) {
 					const msg = err instanceof Error ? err.message : 'Unknown error';
 					status.innerHTML = `<span class="error">${msg}</span>`;

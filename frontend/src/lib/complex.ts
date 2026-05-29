@@ -4,6 +4,7 @@ export type AddResult = {
 	a: Complex;
 	b: Complex;
 	sum: Complex;
+	plot_base64: string;
 };
 
 const TAU = 2 * Math.PI;
