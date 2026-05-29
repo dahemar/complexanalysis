@@ -76,3 +76,7 @@ The Astro app lives in `frontend/`. Root `vercel.json` builds that folder; **`ap
 - Multiplication, conjugate, polar form
 - Contour plots and holomorphic maps
 - Shared types / OpenAPI client generation
+
+## Contributors
+- David Herrero
+- Ali Esquembre
