@@ -112,9 +112,14 @@ const mathCode = readPythonModule('contour_integral.py');
 			let playing = false;
 			let raf = 0;
 
+			function clampedIndex(): number {
+				if (!trace) return 0;
+				return Math.min(Math.max(stepIndex, 0), trace.steps);
+			}
+
 			function render() {
 				if (!trace) return;
-				const idx = stepIndex;
+				const idx = clampedIndex();
 				const t = idx * trace.dt;
 				const z = trace.z_points[idx];
 				const ing = trace.integrand_points[idx];
@@ -134,15 +139,16 @@ const mathCode = readPythonModule('contour_integral.py');
 
 			function updateLabels() {
 				if (!trace) return;
+				const idx = clampedIndex();
 				outN.textContent = String(trace.n);
-				const t = stepIndex * trace.dt;
+				const t = idx * trace.dt;
 				const deg = ((t * 180) / Math.PI).toFixed(0);
 				outT.textContent = `${deg}° · ${t.toFixed(2)} rad`;
 				note.textContent = trace.note;
 
-				const current = trace.path[stepIndex];
+				const current = trace.path[idx];
 				const partial = formatComplex(current);
-				if (stepIndex >= trace.steps) {
+				if (idx >= trace.steps) {
 					status.textContent = `∮ = ${trace.closed_label}`;
 				} else if (trace.n === 1) {
 					status.textContent = `∫₀^θ = ${partial}  →  ∮ = 2πi`;
@@ -177,7 +183,7 @@ const mathCode = readPythonModule('contour_integral.py');
 
 			function tick() {
 				if (playing && trace && stepIndex < trace.steps) {
-					stepIndex += 1;
+					stepIndex = Math.min(stepIndex + 1, trace.steps);
 					sliderT.value = String(stepIndex);
 					updateLabels();
 					render();

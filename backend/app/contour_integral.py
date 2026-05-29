@@ -34,6 +34,7 @@ def integral_up_to_t(n: int, R: float, t: float) -> ComplexPoint:
     - n = 1: show the exact partial integral ∫_0^t i dt' = i t'.
     - n > 1: show the closed-contour result (0) at all times.
     """
+    t = max(0.0, min(t, TAU))
     if n == 1:
         return ComplexPoint(0.0, t)
     return ComplexPoint(0.0, 0.0)
