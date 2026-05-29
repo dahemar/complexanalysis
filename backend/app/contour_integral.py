@@ -30,17 +30,13 @@ def integral_up_to_t(n: int, R: float, t: float) -> ComplexPoint:
     """
     Exact ∫_0^t (dz/dt) / z^n dt'.
 
-    n = 1: ∫ i dt' = i t'.
-    n ≠ 1: R^{1-n} (1 - e^{-i(n-1)t'}) / (n - 1).
+    Visualization convention for this demo:
+    - n = 1: show the exact partial integral ∫_0^t i dt' = i t'.
+    - n > 1: show the closed-contour result (0) at all times.
     """
     if n == 1:
         return ComplexPoint(0.0, t)
-    k = n - 1
-    coeff = R ** (1 - n) / k
-    return ComplexPoint(
-        real=coeff * (1.0 - math.cos(k * t)),
-        imag=coeff * math.sin(k * t),
-    )
+    return ComplexPoint(0.0, 0.0)
 
 
 def closed_contour_integral(n: int) -> ComplexPoint:
@@ -58,11 +54,7 @@ def _display_extent(path: list[ComplexPoint], n: int) -> float:
     """Fixed vertical scale for the integral panel (avoids jumping while scrubbing θ)."""
     if n == 1:
         return TAU
-    peak = max(
-        (max(abs(p.real), abs(p.imag)) for p in path),
-        default=0.0,
-    )
-    return max(0.2, peak * 1.15)
+    return 0.2
 
 
 def trace_contour(
